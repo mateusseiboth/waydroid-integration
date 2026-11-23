@@ -62,18 +62,20 @@ export class SessionController {
   }
 
   private request({ requested, failed, run }: SessionRequest): void {
-    this.dispatch(requested);
+    if (!this.dispatch(requested)) return;
+
     run(this.backend).catch((error: unknown) => {
       this.dispatch(failed);
       this.onError(error);
     });
   }
 
-  private dispatch(event: SessionEvent): void {
+  private dispatch(event: SessionEvent): boolean {
     const next = nextSessionState(this.current, event);
-    if (next === this.current) return;
+    if (next === this.current) return false;
 
     this.current = next;
     this.listeners.forEach((listener) => listener(next));
+    return true;
   }
 }

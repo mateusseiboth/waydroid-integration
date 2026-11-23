@@ -7,8 +7,10 @@ import { ThemeSyncFeature } from "@feature/themeSyncFeature";
 import { InterfaceDesktopTheme } from "@infra/gnome/interfaceDesktopTheme";
 import { SettingsKey } from "@infra/gnome/settingsKeys";
 import { AdbAndroidTheme } from "@infra/waydroid/adbAndroidTheme";
+import { WaydroidContainerManager } from "@infra/waydroid/containerManager";
 import { watchWaydroidSession } from "@infra/waydroid/sessionBusWatcher";
 import { WaydroidCli } from "@infra/waydroid/waydroidCli";
+import { runAwake } from "@service/containerWake";
 import { FeatureSet, type FeaturePhase } from "@service/featureSet";
 import { SessionController } from "@service/sessionController";
 import { ThemeSync, type ThemeSyncOptions } from "@service/themeSync";
@@ -36,13 +38,15 @@ export class WaydroidIntegrationSession {
   constructor(settings: Gio.Settings) {
     const cli = new WaydroidCli();
     this.controller = new SessionController(cli, logError("session"));
-    const themeSync = new ThemeSync(
-      new InterfaceDesktopTheme(),
-      new AdbAndroidTheme(),
-      readSyncOptions(settings),
-      () => this.controller.state === SessionState.RUNNING,
-      logError("theme"),
-    );
+    const container = new WaydroidContainerManager();
+    const themeSync = new ThemeSync({
+      desktop: new InterfaceDesktopTheme(),
+      android: new AdbAndroidTheme(),
+      options: readSyncOptions(settings),
+      isAndroidReady: () => this.controller.state === SessionState.RUNNING,
+      awake: (action) => runAwake(container, action),
+      onError: logError("theme"),
+    });
     const features: Feature[] = [
       new AndroidToggleFeature(this.controller, cli, logError("launch")),
       new ThemeSyncFeature(themeSync, this.controller, settings),

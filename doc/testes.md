@@ -14,3 +14,15 @@ O mesmo roteiro do quick-settings-notifications (`doc/testes.md` de lá), trocan
 `XDG_RUNTIME_DIR` curto.
 
 Resultado em 23/11/2026: estado `ACTIVE`, ciclo de desativar e reativar sem erro no log.
+
+## Contra o Waydroid de verdade
+
+Os adaptadores compilados (`dist/infra`, `dist/service`) só importam `gi://`, então rodam
+num `gjs -m` comum contra o Waydroid real, sem o Shell. Em 23/11/2026, com o Android 17
+(LineageOS 24.0, WayDroid-ATV):
+
+- Tema: Android deixado em verde e claro, container congelado; o `ThemeSync` descongelou,
+  aplicou o azul e o escuro do GNOME (`system_palette` 3584E4, `Night mode: yes`) e congelou
+  de novo.
+- Sessão: `SessionController` + `WaydroidCli` + vigia do `id.waydro.Session`: parado,
+  iniciando (clique repetido ignorado), no ar, parando, parado.

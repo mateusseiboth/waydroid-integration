@@ -34,5 +34,20 @@ oxlint/oxfmt, `src/types/*.d.ts`, `src/domain/undo/`, `src/domain/feature/featur
   antes do Android terminar o boot. Por isso o `AdbAndroidTheme` espera o
   `sys.boot_completed` antes de mandar comando.
 - O Waydroid 1.6 deixou o adb seguro: na primeira conexão o Android pede autorização. Sem
-  "Sempre permitir", o `wait-for-device` fica parado até o tempo limite.
+  "Sempre permitir", o `wait-for-device` fica parado até o tempo limite. Na imagem Android 17
+  do WayDroid-ATV o adbd vem DESLIGADO (`sys.usb.config=none`): é preciso ligar a depuração
+  USB nas Opções do desenvolvedor.
+- Container congelado (`suspend_action = freeze`) trava qualquer `adb shell`. Todo comando
+  para o Android passa por `runAwake` (descongela, executa, congela de novo) e todo `adb` tem
+  tempo limite (`buildAdbArgv`). Nunca chame adb sem os dois.
+- O container pode ficar minutos em `FREEZING`: o `vold` do Android roda fstrim no `/data`,
+  que é bind mount do btrfs do `/home` do host, e a thread fica em `submit_bio_wait`. O
+  `Unfreeze` do Waydroid só age em `FROZEN`, por isso o `runAwake` espera sair de `FREEZING`
+  (até 60 s) e desiste com erro se não sair.
+- `GetSession` do `id.waydro.ContainerManager` não responde enquanto outro método do mesmo
+  serviço está preso (ele é de uma thread só). Chamada D-Bus sempre com tempo limite.
+- Android 17 recusa `theme_customization_overlay_packages` sem
+  `android.theme.customization.theme_style` (`JSONException` no `ThemeOverlayController`).
+- `SessionController` ignora clique durante `STARTING`/`STOPPING`: um `start` disparado
+  enquanto a sessão velha para dá "Session is already running" e não sobe nada.
 - `waydroid shell` exige root; não use na extensão.

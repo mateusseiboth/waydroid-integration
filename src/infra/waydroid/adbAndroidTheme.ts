@@ -1,6 +1,7 @@
 import GLib from "gi://GLib";
 
 import {
+  buildAdbArgv,
   buildAdbSerial,
   buildNightModeArgs,
   buildThemeOverlayArgs,
@@ -12,7 +13,8 @@ import { runCommand } from "@infra/gnome/subprocess";
 import type { AndroidTheme } from "@service/themeSync";
 
 const LEASES_FILE = "/var/lib/misc/dnsmasq.waydroid0.leases";
-const BOOT_TIMEOUT_SECONDS = "180";
+const COMMAND_TIMEOUT_SECONDS = 20;
+const BOOT_TIMEOUT_SECONDS = 180;
 
 const readLeases = (): string => {
   const [, contents] = GLib.file_get_contents(LEASES_FILE);
@@ -32,7 +34,7 @@ export class AdbAndroidTheme implements AndroidTheme {
 
   private async shell(args: readonly string[]): Promise<void> {
     const serial = await this.connectOnce();
-    await runCommand(["adb", "-s", serial, "shell", ...args]);
+    await runCommand(buildAdbArgv(serial, ["shell", ...args], COMMAND_TIMEOUT_SECONDS));
   }
 
   private connectOnce(): Promise<string> {
@@ -45,17 +47,14 @@ export class AdbAndroidTheme implements AndroidTheme {
     if (!address) throw new Error("O container do Waydroid não tem endereço IP.");
 
     const serial = buildAdbSerial(address);
-    await runCommand(["adb", "connect", serial]);
-    await runCommand([
-      "timeout",
-      BOOT_TIMEOUT_SECONDS,
-      "adb",
-      "-s",
-      serial,
-      "wait-for-device",
-      "shell",
-      WAIT_FOR_BOOT_SCRIPT,
-    ]);
+    await runCommand(["timeout", String(COMMAND_TIMEOUT_SECONDS), "adb", "connect", serial]);
+    await runCommand(
+      buildAdbArgv(
+        serial,
+        ["wait-for-device", "shell", WAIT_FOR_BOOT_SCRIPT],
+        BOOT_TIMEOUT_SECONDS,
+      ),
+    );
     return serial;
   }
 }

@@ -6,6 +6,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   ADB_PORT,
+  buildAdbArgv,
   buildAdbSerial,
   buildNightModeArgs,
   buildThemeOverlayArgs,
@@ -58,5 +59,20 @@ describe("conexão", () => {
 
   test("espera o boot pelo sys.boot_completed", () => {
     expect(WAIT_FOR_BOOT_SCRIPT).toContain("getprop sys.boot_completed");
+  });
+
+  test("todo adb roda com tempo limite e no aparelho certo", () => {
+    expect(buildAdbArgv("10.0.0.2:5555", ["shell", "cmd", "uimode", "night", "yes"], 20)).toEqual([
+      "timeout",
+      "20",
+      "adb",
+      "-s",
+      "10.0.0.2:5555",
+      "shell",
+      "cmd",
+      "uimode",
+      "night",
+      "yes",
+    ]);
   });
 });

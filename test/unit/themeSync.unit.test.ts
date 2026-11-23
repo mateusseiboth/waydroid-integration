@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
 
 import { AccentColor, ColorScheme, NightMode, buildThemeOverlay } from "@domain/theme/androidTheme";
-import { ThemeSync, type DesktopTheme, type ThemeSyncOptions } from "@service/themeSync";
+import { ThemeSync, type DesktopTheme, type ThemeSyncDependencies } from "@service/themeSync";
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -26,21 +26,25 @@ const createAndroid = () => ({
   setThemeOverlay: mock((_overlay: string) => Promise.resolve()),
 });
 
-const options = (darkMode: boolean, accentColor: boolean): ThemeSyncOptions => ({
-  syncDarkMode: () => darkMode,
-  syncAccentColor: () => accentColor,
-});
+const createSync = (overrides: Partial<ThemeSyncDependencies> = {}) => {
+  const android = createAndroid();
+  const onError = mock((_error: unknown) => {});
+  const desktop = createDesktop(ColorScheme.PREFER_DARK, AccentColor.GREEN);
+  const sync = new ThemeSync({
+    desktop,
+    android,
+    options: { syncDarkMode: () => true, syncAccentColor: () => true },
+    isAndroidReady: () => true,
+    awake: (action) => action(),
+    onError,
+    ...overrides,
+  });
+  return { sync, android, desktop, onError };
+};
 
 describe("ThemeSync", () => {
   test("push leva modo noturno e paleta para o Android", async () => {
-    const android = createAndroid();
-    const sync = new ThemeSync(
-      createDesktop(ColorScheme.PREFER_DARK, AccentColor.GREEN),
-      android,
-      options(true, true),
-      () => true,
-      () => {},
-    );
+    const { sync, android } = createSync();
 
     await sync.push();
 
@@ -49,14 +53,9 @@ describe("ThemeSync", () => {
   });
 
   test("respeita o que está desligado nas preferências", async () => {
-    const android = createAndroid();
-    const sync = new ThemeSync(
-      createDesktop(ColorScheme.PREFER_DARK, AccentColor.GREEN),
-      android,
-      options(false, true),
-      () => true,
-      () => {},
-    );
+    const { sync, android } = createSync({
+      options: { syncDarkMode: () => false, syncAccentColor: () => true },
+    });
 
     await sync.push();
 
@@ -64,16 +63,44 @@ describe("ThemeSync", () => {
     expect(android.setThemeOverlay).toHaveBeenCalledTimes(1);
   });
 
+  test("os comandos rodam com o container acordado, numa vez só", async () => {
+    const order: string[] = [];
+    const android = {
+      setNightMode: () => {
+        order.push("night");
+        return Promise.resolve();
+      },
+      setThemeOverlay: () => {
+        order.push("overlay");
+        return Promise.resolve();
+      },
+    };
+    const awake = async (action: () => Promise<void>): Promise<void> => {
+      order.push("wake");
+      await action();
+      order.push("sleep");
+    };
+    const { sync } = createSync({ android, awake });
+
+    await sync.push();
+
+    expect(order).toEqual(["wake", "night", "overlay", "sleep"]);
+  });
+
+  test("falha ao acordar o container é relatada", async () => {
+    const failure = new Error("D-Bus fora");
+    const { sync, onError } = createSync({ awake: () => Promise.reject(failure) });
+
+    await sync.push();
+
+    expect(onError).toHaveBeenCalledWith(failure);
+  });
+
   test("mudança no GNOME com o Android no ar é repassada", async () => {
-    const desktop = createDesktop(ColorScheme.DEFAULT, AccentColor.BLUE);
-    const android = createAndroid();
-    const sync = new ThemeSync(
-      desktop,
-      android,
-      options(true, false),
-      () => true,
-      () => {},
-    );
+    const { sync, android, desktop } = createSync({
+      options: { syncDarkMode: () => true, syncAccentColor: () => false },
+    });
+    desktop.scheme = ColorScheme.DEFAULT;
     sync.start();
 
     desktop.scheme = ColorScheme.PREFER_DARK;
@@ -85,15 +112,7 @@ describe("ThemeSync", () => {
   });
 
   test("mudança no GNOME com o Android parado é ignorada", async () => {
-    const desktop = createDesktop(ColorScheme.DEFAULT, AccentColor.BLUE);
-    const android = createAndroid();
-    const sync = new ThemeSync(
-      desktop,
-      android,
-      options(true, true),
-      () => false,
-      () => {},
-    );
+    const { sync, android, desktop } = createSync({ isAndroidReady: () => false });
     sync.start();
 
     desktop.emit();
@@ -104,15 +123,7 @@ describe("ThemeSync", () => {
   });
 
   test("depois do stop não escuta mais o GNOME", async () => {
-    const desktop = createDesktop(ColorScheme.DEFAULT, AccentColor.BLUE);
-    const android = createAndroid();
-    const sync = new ThemeSync(
-      desktop,
-      android,
-      options(true, true),
-      () => true,
-      () => {},
-    );
+    const { sync, android, desktop } = createSync();
     sync.start();
     sync.stop();
 
@@ -124,18 +135,11 @@ describe("ThemeSync", () => {
 
   test("falha de um passo não impede o outro e é relatada", async () => {
     const failure = new Error("adb fora");
-    const onError = mock((_error: unknown) => {});
     const android = {
       setNightMode: () => Promise.reject(failure),
       setThemeOverlay: mock((_overlay: string) => Promise.resolve()),
     };
-    const sync = new ThemeSync(
-      createDesktop(ColorScheme.PREFER_DARK, AccentColor.RED),
-      android,
-      options(true, true),
-      () => true,
-      onError,
-    );
+    const { sync, onError } = createSync({ android });
 
     await sync.push();
 

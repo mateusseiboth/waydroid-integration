@@ -17,6 +17,16 @@ export interface ThemeSyncOptions {
 }
 
 export type ThemeSyncErrorListener = (error: unknown) => void;
+export type Awake = (action: () => Promise<void>) => Promise<void>;
+
+export interface ThemeSyncDependencies {
+  readonly desktop: DesktopTheme;
+  readonly android: AndroidTheme;
+  readonly options: ThemeSyncOptions;
+  readonly isAndroidReady: () => boolean;
+  readonly awake: Awake;
+  readonly onError: ThemeSyncErrorListener;
+}
 
 interface ThemeStep {
   readonly isEnabled: (options: ThemeSyncOptions) => boolean;
@@ -37,16 +47,10 @@ const THEME_STEPS: readonly ThemeStep[] = [
 export class ThemeSync {
   private unsubscribe: (() => void) | null = null;
 
-  constructor(
-    private readonly desktop: DesktopTheme,
-    private readonly android: AndroidTheme,
-    private readonly options: ThemeSyncOptions,
-    private readonly isAndroidReady: () => boolean,
-    private readonly onError: ThemeSyncErrorListener,
-  ) {}
+  constructor(private readonly deps: ThemeSyncDependencies) {}
 
   start(): void {
-    this.unsubscribe = this.desktop.onChanged(() => void this.pushWhenReady());
+    this.unsubscribe = this.deps.desktop.onChanged(() => void this.pushWhenReady());
   }
 
   stop(): void {
@@ -55,17 +59,24 @@ export class ThemeSync {
   }
 
   async push(): Promise<void> {
-    const steps = THEME_STEPS.filter((step) => step.isEnabled(this.options));
-    const results = await Promise.allSettled(
-      steps.map((step) => step.run(this.desktop, this.android)),
-    );
+    try {
+      await this.deps.awake(() => this.runSteps());
+    } catch (error) {
+      this.deps.onError(error);
+    }
+  }
+
+  private async runSteps(): Promise<void> {
+    const { desktop, android, options, onError } = this.deps;
+    const steps = THEME_STEPS.filter((step) => step.isEnabled(options));
+    const results = await Promise.allSettled(steps.map((step) => step.run(desktop, android)));
     results
       .filter((result): result is PromiseRejectedResult => result.status === "rejected")
-      .forEach((result) => this.onError(result.reason));
+      .forEach((result) => onError(result.reason));
   }
 
   private pushWhenReady(): Promise<void> {
-    if (!this.isAndroidReady()) return Promise.resolve();
+    if (!this.deps.isAndroidReady()) return Promise.resolve();
     return this.push();
   }
 }

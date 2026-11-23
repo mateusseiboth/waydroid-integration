@@ -52,11 +52,12 @@ describe("resolveAccentHex", () => {
 });
 
 describe("buildThemeOverlay", () => {
-  test("monta o JSON de theme_customization_overlay_packages com a paleta fixa", () => {
+  test("monta o JSON de theme_customization_overlay_packages com a paleta fixa e o estilo tonal, que o Android 17 exige", () => {
     expect(JSON.parse(buildThemeOverlay(AccentColor.RED))).toEqual({
       "android.theme.customization.color_source": "preset",
       "android.theme.customization.system_palette": "E62D42",
       "android.theme.customization.accent_color": "E62D42",
+      "android.theme.customization.theme_style": "TONAL_SPOT",
     });
   });
 });

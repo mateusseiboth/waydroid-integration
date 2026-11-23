@@ -33,6 +33,12 @@ connect`, espera o `sys.boot_completed` com tempo limite e então `adb shell`. O
 junta os argumentos numa linha para o `sh` do Android, por isso o JSON da paleta vai citado
 (`quoteForShell`).
 
+Tudo roda dentro de `runAwake` (`src/service/containerWake.ts`): o Waydroid congela o
+container quando o Android suspende, e congelado o `adb shell` não responde. O `runAwake` lê
+o estado pelo `GetSession` do `id.waydro.ContainerManager` (barramento do sistema, liberado
+para qualquer usuário), espera sair de `FREEZING`, descongela se estiver `FROZEN`, executa e
+congela de novo, mesmo se o comando falhar.
+
 Alternativas descartadas:
 
 - `waydroid shell`: exige root.

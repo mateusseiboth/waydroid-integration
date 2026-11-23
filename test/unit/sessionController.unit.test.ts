@@ -99,4 +99,20 @@ describe("SessionController", () => {
 
     expect(listener).not.toHaveBeenCalled();
   });
+
+  test.each([
+    ["parando", (controller: SessionController) => (controller.onAppeared(), controller.toggle())],
+    ["iniciando", (controller: SessionController) => controller.toggle()],
+  ])("clique com a sessão %s é ignorado", (_label, enterTransition) => {
+    const start = mock(() => Promise.resolve());
+    const stop = mock(() => Promise.resolve());
+    const controller = new SessionController({ start, stop }, () => {});
+    enterTransition(controller);
+    const state = controller.state;
+
+    controller.toggle();
+
+    expect(controller.state).toBe(state);
+    expect(start.mock.calls.length + stop.mock.calls.length).toBe(1);
+  });
 });

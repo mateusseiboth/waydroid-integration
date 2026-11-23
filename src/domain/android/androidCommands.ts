@@ -29,3 +29,9 @@ export const parseLeaseAddress = (leases: string): string | null =>
   LEASE_ADDRESS.exec(leases)?.[1] ?? null;
 
 export const buildAdbSerial = (address: string): string => `${address}:${ADB_PORT}`;
+
+export const buildAdbArgv = (
+  serial: string,
+  args: readonly string[],
+  timeoutSeconds: number,
+): readonly string[] => ["timeout", String(timeoutSeconds), "adb", "-s", serial, ...args];

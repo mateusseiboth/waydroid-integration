@@ -19,8 +19,24 @@ congelar o container quando o Android suspende (`suspend_action = freeze`).
 ## Requisitos
 
 - Waydroid instalado e inicializado (`waydroid init`).
-- `adb` (pacote `android-tools`) para seguir o tema. Na primeira vez o Android pede para
-  autorizar a depuração do computador: marque "Sempre permitir".
+- `adb` (pacote `android-tools`) para seguir o tema, com a depuração USB ligada no Android
+  (Configurações > Sobre > toque 7 vezes em "Número da versão"; depois Sistema > Opções do
+  desenvolvedor > Depuração USB). Na primeira conexão o Android pede para autorizar o
+  computador: marque "Sempre permitir".
+
+### Android 17 (imagem WayDroid-ATV) no Fedora
+
+Com o SELinux em enforcing, os serviços APEX do Android 17 (`spc_t`) não conseguem falar
+por binder com o `servicemanager` (`container_runtime_t`) e o boot entra em loop (issue #52
+do waydroid-builds). Um módulo pequeno resolve sem desligar o SELinux:
+
+```bash
+cat > waydroid_apex_binder.cil <<'CIL'
+(allow spc_t container_runtime_t (binder (call transfer)))
+(allow container_runtime_t spc_t (binder (call transfer)))
+CIL
+sudo semodule -i waydroid_apex_binder.cil
+```
 
 ## Desenvolvimento
 

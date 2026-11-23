@@ -50,5 +50,6 @@ export const buildThemeOverlay = (accent: string): string => {
     "android.theme.customization.color_source": "preset",
     "android.theme.customization.system_palette": hex,
     "android.theme.customization.accent_color": hex,
+    "android.theme.customization.theme_style": "TONAL_SPOT",
   });
 };
