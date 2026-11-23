@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="waydroid-integration">
+  <schema id="org.gnome.shell.extensions.waydroid-integration"
+          path="/org/gnome/shell/extensions/waydroid-integration/">
+    <key name="sync-dark-mode" type="b">
+      <default>true</default>
+      <summary>Follow the GNOME dark style in Android</summary>
+    </key>
+    <key name="sync-accent-color" type="b">
+      <default>true</default>
+      <summary>Follow the GNOME accent color in Android</summary>
+    </key>
+  </schema>
+</schemalist>

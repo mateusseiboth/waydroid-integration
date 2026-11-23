@@ -1,0 +1,42 @@
+# Tradução pt-BR da extensão waydroid-integration.
+msgid ""
+msgstr ""
+"Project-Id-Version: waydroid-integration\n"
+"PO-Revision-Date: 2026-11-23 00:00-0400\n"
+"Last-Translator: Mateus Seiboth\n"
+"Language-Team: Portuguese (Brazil)\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Android"
+msgstr "Android"
+
+msgid "Show Android"
+msgstr "Mostrar o Android"
+
+msgid "Android Settings"
+msgstr "Configurações do Android"
+
+msgid "Starting"
+msgstr "Iniciando"
+
+msgid "Stopping"
+msgstr "Parando"
+
+msgid "Appearance"
+msgstr "Aparência"
+
+msgid "Follow dark style"
+msgstr "Seguir o estilo escuro"
+
+msgid "Android switches to dark theme together with GNOME."
+msgstr "O Android muda para o tema escuro junto com o GNOME."
+
+msgid "Follow accent color"
+msgstr "Seguir a cor de destaque"
+
+msgid "Android uses the GNOME accent color in its palette."
+msgstr "O Android usa a cor de destaque do GNOME na paleta."

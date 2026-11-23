@@ -1,0 +1,10 @@
+{
+  "uuid": "waydroid-integration@mateusseiboth.github.io",
+  "name": "Waydroid Integration",
+  "description": "Start and stop Waydroid from Quick Settings, open the Android interface or its settings, and keep Android following the GNOME dark style and accent color.\n\nRequires Waydroid installed and initialized. Theme sync uses adb (android-tools).",
+  "shell-version": ["50", "51"],
+  "url": "https://github.com/mateusseiboth/waydroid-integration",
+  "settings-schema": "org.gnome.shell.extensions.waydroid-integration",
+  "gettext-domain": "waydroid-integration",
+  "version-name": "0.1.0"
+}

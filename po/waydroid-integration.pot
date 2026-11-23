@@ -1,0 +1,34 @@
+# Mensagens traduzíveis de waydroid-integration.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Android"
+msgstr ""
+
+msgid "Android Settings"
+msgstr ""
+
+msgid "Android switches to dark theme together with GNOME."
+msgstr ""
+
+msgid "Android uses the GNOME accent color in its palette."
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Follow accent color"
+msgstr ""
+
+msgid "Follow dark style"
+msgstr ""
+
+msgid "Show Android"
+msgstr ""
+
+msgid "Starting"
+msgstr ""
+
+msgid "Stopping"
+msgstr ""
