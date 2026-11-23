@@ -38,6 +38,14 @@ CIL
 sudo semodule -i waydroid_apex_binder.cil
 ```
 
+Nessa imagem o modo de uma janela por app não funciona (issue #58 do waydroid-builds): o
+Android abre o app, mas a janela nunca chega ao GNOME. Use o modo de janela única:
+
+```bash
+waydroid prop set persist.waydroid.multi_windows false
+waydroid session stop   # e abra de novo
+```
+
 ## Desenvolvimento
 
 ```bash
